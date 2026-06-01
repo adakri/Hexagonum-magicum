@@ -5,17 +5,17 @@ from .geometry import generer_les_coordonnes_hex
 
 MAGIC_SUM_ORDER_3 = 38
 
-
+# ça fait double mias je dois avoir un système pour ordonner les choses dans un premier temps
 @dataclass
 class Cellule:
-    indice: int
+    indice: int # à remplir par les étudiants
     q: int
     r: int
     valeur: Optional[int] = None
 
 
 class HexagoneMagique:
-    def __init__(self, radius=2, show_widget=False):
+    def __init__(self, radius=2, show_widget=True):
         self.radius = radius
 
         coords = generer_les_coordonnes_hex(radius)
@@ -23,7 +23,7 @@ class HexagoneMagique:
         self.cells: List[Cellule] = [
             Cellule(i, q, r) for i, (q, r) in enumerate(coords)
         ]
-
+        # On laisse aux gens de décider des indexations
         self.valeurs = [None] * len(self.cells)
 
         self._history = []
@@ -32,12 +32,28 @@ class HexagoneMagique:
         self.parcours = list(range(len(self.cells)))
 
         if show_widget:
-            self.show_widget()
+            self.show_widget()        
+    
+    # propriéts
+    @property
+    def rempli(self) -> bool:
+        """True si toutes les cellules sont remplies (aucune valeur None)."""
+        return all(v is not None for v in self.valeurs)
 
-    # -------------------------
-    # Core operations
-    # -------------------------
+    @property
+    def valide(self) -> bool:
+        """True si toutes les valeurs sont des entiers entre 1 et 19 (inclus)."""
+        return all(isinstance(v, int) and 1 <= v <= 19 for v in self.valeurs)
 
+    @property
+    def gagné(self) -> bool:
+        """True si la grille est magique (utilise la méthode `valider`)."""
+        try:
+            return bool(self.valider().get("magic", False))
+        except Exception:
+            return False
+
+    # Opérations sur la struct
     def mettre(self, slot: int, valeur: int):
         self.valeurs[slot] = valeur
         self.cells[slot].valeur = valeur
@@ -68,25 +84,23 @@ class HexagoneMagique:
 
         self._log("remplir", None, None)
         self._refresh()
+        
+    def fixer_parcours(self, list_des_indices: List):
+        assert len(list_des_indices) == len(self.cells)
+        for i,cell in enumerate(self.cells):
+            cell.indice = list_des_indices[i]
+        self._refresh()
 
     # -------------------------
-    # Learning API
+    # Trucs à faire par eux?
     # -------------------------
 
     def lignes(self):
-        """Expose structure for student exploration."""
         return self._compute_lines()
 
-    def tracer_parcours(self):
-        return [(i, self.valeurs[i]) for i in self.parcours]
 
-    # -------------------------
-    # Validation
-    # -------------------------
-
-    def valider(self):
+    def valider(self):        
         lines = self._compute_lines()
-
         sums = []
         for line in lines:
             vals = [self.valeurs[i] for i in line]
@@ -140,10 +154,8 @@ class HexagoneMagique:
 
         return lines
 
-    # -------------------------
-    # Internal helpers
-    # -------------------------
 
+    # Un vocabulaire plus experssif pour les opérations?
     def _log(self, op, a, b):
         self._history.append((op, a, b))
 
@@ -151,9 +163,6 @@ class HexagoneMagique:
         if self.widget:
             self.widget.redraw()
 
-    # -------------------------
-    # Widget binding
-    # -------------------------
 
     def show_widget(self):
         from .widgets import MagicHexagonWidget
