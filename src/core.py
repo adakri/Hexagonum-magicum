@@ -16,13 +16,10 @@ class Cellule:
 
 class HexagoneMagique:
     def __init__(self, radius=2, show_widget=True):
+        # Données internes
         self.radius = radius
-
         coords = generer_les_coordonnes_hex(radius)
-
-        self.cells: List[Cellule] = [
-            Cellule(i, q, r) for i, (q, r) in enumerate(coords)
-        ]
+        self.cells: List[Cellule] = [Cellule(i, q, r) for i, (q, r) in enumerate(coords)]
         # On laisse aux gens de décider des indexations
         self.valeurs = [None] * len(self.cells)
 
@@ -31,10 +28,16 @@ class HexagoneMagique:
 
         self.parcours = list(range(len(self.cells)))
 
+        # Points d'enregistrement pour que les étudiants branchent leurs fonctions
+        # TODO: complèter
+        self.fonction_pour_lire_toutes_les_lignes = self._impl_fonction_pour_lire_toutes_les_lignes
+        self.fonction_pour_lire_une_ligne = self._impl_fonction_pour_lire_une_ligne
+
         if show_widget:
             self.show_widget()        
     
     # propriéts
+    # Est ce que les étudiants ont à coder cela aussi
     @property
     def rempli(self) -> bool:
         """True si toutes les cellules sont remplies (aucune valeur None)."""
@@ -92,22 +95,40 @@ class HexagoneMagique:
         self._refresh()
 
     # -------------------------
-    # Trucs à faire par eux?
+    # Enregistrement des fonctions pour ne pas le faire de manière laide.
+    # -------------------------
+    def enregistrer(self, **kwargs):
+        """
+        Enregistre les fonctions fournies par les étudiants.
+        """
+        valides = {
+            "fonction_pour_lire_toutes_les_lignes",
+            "fonction_pour_lire_une_ligne",
+        }
+        for nom, func in kwargs.items():
+            if nom not in valides:
+                raise ValueError(f"Fonction inconnue: {nom}. Valides: {valides}")
+            if not callable(func):
+                raise TypeError(f"{nom} doit être callable")
+            setattr(self, nom, func)
+
+    # -------------------------
+    # API publique utilisant les fonctions enregistrées
     # -------------------------
 
-    def lignes(self):
-        return self._compute_lines()
+    def lire_toutes_les_lignes(self):
+        """Lit toutes les lignes via la fonction enregistrée."""
+        return self.fonction_pour_lire_toutes_les_lignes()
 
+    def lire_une_ligne(self, line_index):
+        """Lit une ligne via la fonction enregistrée."""
+        return self.fonction_pour_lire_une_ligne(line_index)
 
-    def valider(self):        
-        lines = self._compute_lines()
-        sums = []
-        for line in lines:
-            vals = [self.valeurs[i] for i in line]
-            if None in vals:
-                sums.append(None)
-            else:
-                sums.append(sum(vals))
+    def valider(self):
+        """Valide l'hexagone en utilisant la fonction enregistrée pour les lignes."""
+        # Récupère les lignes via la fonction enregistrée
+        resultats = self.fonction_pour_lire_toutes_les_lignes()
+        sums = [s for _, _, _, s in resultats]
 
         complete = all(v is not None for v in self.valeurs)
 
@@ -128,21 +149,30 @@ class HexagoneMagique:
             "complete": complete,
         }
 
+    # -------------------------
+    # Implémentations (dépréciées, gardées pour référence)
+    # -------------------------
+    def lignes(self):
+        """DEPRECATED: Utilise fonction_pour_lire_toutes_les_lignes() à la place."""
+        import warnings
+        warnings.warn(
+            "lignes() est déprécié. Utilisez lire_toutes_les_lignes() à la place.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._compute_lines()
+
     def _compute_lines(self):
         coord_to_i = {(c.q, c.r): c.indice for c in self.cells}
-
         lines = []
-
         for q in range(-2, 3):
             line = [coord_to_i[(q, r)] for r in range(-2, 3) if (q, r) in coord_to_i]
             if len(line) >= 3:
                 lines.append(line)
-
         for r in range(-2, 3):
             line = [coord_to_i[(q, r)] for q in range(-2, 3) if (q, r) in coord_to_i]
             if len(line) >= 3:
                 lines.append(line)
-
         for s in range(-2, 3):
             line = []
             for q in range(-2, 3):
@@ -154,7 +184,22 @@ class HexagoneMagique:
 
         return lines
 
+    def _impl_fonction_pour_lire_toutes_les_lignes(self):
+        """Implémentation par défaut: retourne toutes les lignes et leurs sommes."""
+        resultats = []
+        for i, ligne in enumerate(self._compute_lines()):
+            valeurs = [self.valeurs[j] for j in ligne]
+            somme = None if any(v is None for v in valeurs) else sum(valeurs)
+            resultats.append((i, ligne, valeurs, somme))
+        return resultats
 
+    def _impl_fonction_pour_lire_une_ligne(self, line_index):
+        """Implémentation par défaut: retourne une ligne spécifique et sa somme."""
+        lignes = self._compute_lines()
+        indices = lignes[line_index]
+        valeurs = [self.valeurs[i] for i in indices]
+        somme = None if any(v is None for v in valeurs) else sum(valeurs)
+        return indices, valeurs, somme
     # Un vocabulaire plus experssif pour les opérations?
     def _log(self, op, a, b):
         self._history.append((op, a, b))
