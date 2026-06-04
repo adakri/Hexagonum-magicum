@@ -90,9 +90,6 @@ class MagicHexagonWidget:
         svg.append("</svg>")
         return "".join(svg)
     
-    def _render_board_trace_indices(self):
-        """Tracer des lignes pour trouver les lignes etc"""
-        return
 
     def _hex_points(self, cx, cy, r):
         pts = []
@@ -116,6 +113,7 @@ class MagicHexagonWidget:
         """
 
     def _render_status(self):
+        return
         html = f"""
             <div style="padding:16px; border:1px solid #dde2f0; border-radius:16px; background:#ffffff; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:100%; box-sizing:border-box;">
                 <h3 style="margin:0 0 10px 0; font-size:1.1rem;">Comment ça se passe?</h3>
@@ -140,6 +138,7 @@ class MagicHexagonWidget:
         return html
 
     def _render_history(self):
+        return
         html = "<h3>Historique</h3>"
 
         for op in self.hexagon._history[-15:]:

@@ -85,29 +85,11 @@ class HexagoneMagique:
         self._log("remplir", None, None)
         self._refresh()
         
-    def fixer_parcours(self, list_des_indices: List):
+    def changer_parcours(self, list_des_indices: List):
         assert len(list_des_indices) == len(self.cells)
         for i,cell in enumerate(self.cells):
             cell.indice = list_des_indices[i]
         self._refresh()
-
-    # -------------------------
-    # Enregistrement des fonctions pour ne pas le faire de manière laide.
-    # -------------------------
-    def enregistrer(self, **kwargs):
-        """
-        Enregistre les fonctions fournies par les étudiants.
-        """
-        valides = {
-            "fonction_pour_lire_toutes_les_lignes",
-            "fonction_pour_lire_une_ligne",
-        }
-        for nom, func in kwargs.items():
-            if nom not in valides:
-                raise ValueError(f"Fonction inconnue: {nom}. Valides: {valides}")
-            if not callable(func):
-                raise TypeError(f"{nom} doit être callable")
-            setattr(self, nom, func)
 
     # -------------------------
     # API publique utilisant les fonctions enregistrées
@@ -194,6 +176,7 @@ class HexagoneMagique:
         valeurs = [self.valeurs[i] for i in indices]
         somme = None if any(v is None for v in valeurs) else sum(valeurs)
         return indices, valeurs, somme
+    
     # Un vocabulaire plus experssif pour les opérations?
     def _log(self, op, a, b):
         self._history.append((op, a, b))
