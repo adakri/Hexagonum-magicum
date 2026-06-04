@@ -36,8 +36,8 @@ class MagicHexagonWidget:
             </div>
         """
 
-        self.status.value = self._render_status()
-        self.history.value = self._render_history()
+        #self.status.value = self._render_status()
+        #self.history.value = self._render_history()
 
     def display(self):
         # Instancier les widgets
