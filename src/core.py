@@ -17,20 +17,15 @@ class Cellule:
 class HexagoneMagique:
     def __init__(self, radius=2, show_widget=True):
         self.radius = radius
-
         coords = generer_les_coordonnes_hex(radius)
-
         self.cells: List[Cellule] = [
             Cellule(i, q, r) for i, (q, r) in enumerate(coords)
         ]
         # On laisse aux gens de décider des indexations
         self.valeurs = [None] * len(self.cells)
-
         self._history = []
         self.widget = None
-
         self.parcours = list(range(len(self.cells)))
-
         if show_widget:
             self.show_widget()        
     
@@ -77,7 +72,6 @@ class HexagoneMagique:
     def remplir(self, valeurs):
         if len(valeurs) != len(self.cells):
             raise ValueError("Wrong number of values")
-
         for i, v in enumerate(valeurs):
             self.valeurs[i] = v
             self.cells[i].valeur = v
@@ -108,19 +102,15 @@ class HexagoneMagique:
                 sums.append(None)
             else:
                 sums.append(sum(vals))
-
         complete = all(v is not None for v in self.valeurs)
-
         magic = (
             complete
             and sorted(self.valeurs) == list(range(1, 20))
             and all(s == MAGIC_SUM_ORDER_3 for s in sums)
         )
-
         bad_lines = [
             i for i, s in enumerate(sums) if s is not None and s != MAGIC_SUM_ORDER_3
         ]
-
         return {
             "magic": magic,
             "line_sums": sums,
@@ -130,19 +120,15 @@ class HexagoneMagique:
 
     def _compute_lines(self):
         coord_to_i = {(c.q, c.r): c.indice for c in self.cells}
-
         lines = []
-
         for q in range(-2, 3):
             line = [coord_to_i[(q, r)] for r in range(-2, 3) if (q, r) in coord_to_i]
             if len(line) >= 3:
                 lines.append(line)
-
         for r in range(-2, 3):
             line = [coord_to_i[(q, r)] for q in range(-2, 3) if (q, r) in coord_to_i]
             if len(line) >= 3:
                 lines.append(line)
-
         for s in range(-2, 3):
             line = []
             for q in range(-2, 3):
