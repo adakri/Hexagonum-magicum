@@ -55,25 +55,26 @@ class MagicHexagonWidget:
 
         line_sums = []
         bad_lines = []
+        good_lines = []
         line_indices = {}
-        if(validation is not None):
+        if validation is not None:
             for line, item in enumerate(validation):
                 line_indices[line] = item.get("indices", [])
                 somme = item.get("somme")
-                ok = (somme == 38)
-                if ok is False and somme is not None:
+                is_good = (somme == 38)
+                if is_good:
+                    good_lines.append(line)
+                elif somme is not None:
                     bad_lines.append(line)
                 line_sums.append(somme)
         cell_fill = {}
         for c in cells:
             related_lines = [line for line, indices in line_indices.items() if c.indice in indices]
-            if(validation is not None):
-                if any(line in bad_lines for line in related_lines):
-                    cell_fill[c.indice] = "#ffb3b3"
-                elif related_lines and all((line not in bad_lines) for line in related_lines):
-                    cell_fill[c.indice] = "#b3ffb3"
+            if validation is not None and related_lines:
+                if any(line in good_lines for line in related_lines):
+                    cell_fill[c.indice] = "#1bc11b"
                 else:
-                    cell_fill[c.indice] = "#ffffff" if c.valeur is None else "#fff2b3"
+                    cell_fill[c.indice] = "#d51f1f"
             else:
                 cell_fill[c.indice] = "#ffffff" if c.valeur is None else "#fff2b3"
 
@@ -165,8 +166,8 @@ class MagicHexagonWidget:
         #else:
         #    html += "<div style='margin-top:8px; color:green;'>Aucune ligne invalide</div>"
         html += "<div style='margin-top:12px; padding:8px; border:1px solid #ddd; border-radius:10px; background:#fafafa;'>"
-        html += "<div style='margin-bottom:6px;'><span style='display:inline-block;width:16px;height:16px;background:#b3ffb3;border:1px solid #9f9;vertical-align:middle;margin-right:6px;'></span> 😊 Somme à 38</div>"
-        html += "<div><span style='display:inline-block;width:16px;height:16px;background:#ffb3b3;border:1px solid #f99;vertical-align:middle;margin-right:6px;'></span> 😡 Ne Somme pas à 38, grrr...</div>"
+        html += "<div style='margin-bottom:6px;'><span style='display:inline-block;width:16px;height:16px;background:#1bc11b;border:1px solid #9f9;vertical-align:middle;margin-right:6px;'></span> 😊 Somme à 38</div>"
+        html += "<div><span style='display:inline-block;width:16px;height:16px;background:#d51f1f;border:1px solid #f99;vertical-align:middle;margin-right:6px;'></span> 😡 Ne Somme pas à 38, grrr...</div>"
         html += "</div></div>"
         return html
 

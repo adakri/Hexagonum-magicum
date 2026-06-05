@@ -95,6 +95,7 @@ class HexagoneMagique:
         self._history.append((op, a, b))
 
     def _refresh(self):
+        return
         if self.widget:
             self.widget.redraw()
 
@@ -105,3 +106,4 @@ class HexagoneMagique:
         self.widget = MagicHexagonWidget(self)
         self.widget.display()
         return self.widget
+
