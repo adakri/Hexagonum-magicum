@@ -27,11 +27,6 @@ class HexagoneMagique:
         self.parcours = list(range(len(self.cells)))
         self.validation_data = None
 
-        # Points d'enregistrement pour que les étudiants branchent leurs fonctions
-        # TODO: complèter
-        self.fonction_pour_lire_toutes_les_lignes = self._impl_fonction_pour_lire_toutes_les_lignes
-        self.fonction_pour_lire_une_ligne = self._impl_fonction_pour_lire_une_ligne
-
         if dessiner_hex:
             self.dessiner_hex()        
     
@@ -63,12 +58,7 @@ class HexagoneMagique:
             self._log("mettre", slot, valeur)
             self._refresh()
         else:
-            a,b = self.valeurs[slot], valeur
-            print(a,b)
-            self.valeurs[self.valeurs.index(valeur)] = b
-            self.valeurs[slot] = a
-            self._refresh()
-            
+            self.echanger(slot, self.valeurs.index(valeur))            
 
     def vider(self, slot: int):
         old = self.valeurs[slot]
@@ -100,93 +90,6 @@ class HexagoneMagique:
             cell.indice = list_des_indices[i]
         self._refresh()
 
-    # -------------------------
-    # API publique utilisant les fonctions enregistrées
-    # -------------------------
-
-    def lire_toutes_les_lignes(self):
-        """Lit toutes les lignes via la fonction enregistrée."""
-        return self.fonction_pour_lire_toutes_les_lignes()
-
-    def lire_une_ligne(self, line_index):
-        """Lit une ligne via la fonction enregistrée."""
-        return self.fonction_pour_lire_une_ligne(line_index)
-
-    def valider(self):
-        """Valide l'hexagone en utilisant la fonction enregistrée pour les lignes."""
-        # Récupère les lignes via la fonction enregistrée
-        resultats = self.fonction_pour_lire_toutes_les_lignes()
-        sums = [s for _, _, _, s in resultats]
-
-        complete = all(v is not None for v in self.valeurs)
-        magic = (
-            complete
-            and sorted(self.valeurs) == list(range(1, 20))
-            and all(s == MAGIC_SUM_ORDER_3 for s in sums)
-        )
-        bad_lines = [
-            i for i, s in enumerate(sums) if s is not None and s != MAGIC_SUM_ORDER_3
-        ]
-        return {
-            "magic": magic,
-            "line_sums": sums,
-            "bad_lines": bad_lines,
-            "complete": complete,
-            "detail": resultats,
-        }
-
-    # -------------------------
-    # Implémentations (dépréciées, gardées pour référence)
-    # -------------------------
-    def lignes(self):
-        """DEPRECATED: Utilise fonction_pour_lire_toutes_les_lignes() à la place."""
-        import warnings
-        warnings.warn(
-            "lignes() est déprécié. Utilisez lire_toutes_les_lignes() à la place.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._compute_lines()
-
-    def _compute_lines(self):
-        coord_to_i = {(c.q, c.r): c.indice for c in self.cells}
-        lines = []
-        for q in range(-2, 3):
-            line = [coord_to_i[(q, r)] for r in range(-2, 3) if (q, r) in coord_to_i]
-            if len(line) >= 3:
-                lines.append(line)
-        for r in range(-2, 3):
-            line = [coord_to_i[(q, r)] for q in range(-2, 3) if (q, r) in coord_to_i]
-            if len(line) >= 3:
-                lines.append(line)
-        for s in range(-2, 3):
-            line = []
-            for q in range(-2, 3):
-                r = -s - q
-                if (q, r) in coord_to_i:
-                    line.append(coord_to_i[(q, r)])
-            if len(line) >= 3:
-                lines.append(line)
-
-        return lines
-
-    def _impl_fonction_pour_lire_toutes_les_lignes(self):
-        """Implémentation par défaut: retourne toutes les lignes et leurs sommes."""
-        resultats = []
-        for i, ligne in enumerate(self._compute_lines()):
-            valeurs = [self.valeurs[j] for j in ligne]
-            somme = None if any(v is None for v in valeurs) else sum(valeurs)
-            resultats.append((i, ligne, valeurs, somme))
-        return resultats
-
-    def _impl_fonction_pour_lire_une_ligne(self, line_index):
-        """Implémentation par défaut: retourne une ligne spécifique et sa somme."""
-        lignes = self._compute_lines()
-        indices = lignes[line_index]
-        valeurs = [self.valeurs[i] for i in indices]
-        somme = None if any(v is None for v in valeurs) else sum(valeurs)
-        return indices, valeurs, somme
-    
     # Un vocabulaire plus experssif pour les opérations?
     def _log(self, op, a, b):
         self._history.append((op, a, b))
