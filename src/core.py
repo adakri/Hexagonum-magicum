@@ -15,7 +15,7 @@ class Cellule:
 
 
 class HexagoneMagique:
-    def __init__(self, radius=2, show_widget=True):
+    def __init__(self, radius=2, dessiner_hex=True):
         # Données internes
         self.radius = radius
         coords = generer_les_coordonnes_hex(radius)
@@ -25,14 +25,15 @@ class HexagoneMagique:
         self._history = []
         self.widget = None
         self.parcours = list(range(len(self.cells)))
+        self.validation_data = None
 
         # Points d'enregistrement pour que les étudiants branchent leurs fonctions
         # TODO: complèter
         self.fonction_pour_lire_toutes_les_lignes = self._impl_fonction_pour_lire_toutes_les_lignes
         self.fonction_pour_lire_une_ligne = self._impl_fonction_pour_lire_une_ligne
 
-        if show_widget:
-            self.show_widget()        
+        if dessiner_hex:
+            self.dessiner_hex()        
     
     # propriéts
     # Est ce que les étudiants ont à coder cela aussi
@@ -56,10 +57,18 @@ class HexagoneMagique:
 
     # Opérations sur la struct
     def mettre(self, slot: int, valeur: int):
-        self.valeurs[slot] = valeur
-        self.cells[slot].valeur = valeur
-        self._log("mettre", slot, valeur)
-        self._refresh()
+        if self.valeurs[slot] is None:
+            self.valeurs[slot] = valeur
+            self.cells[slot].valeur = valeur
+            self._log("mettre", slot, valeur)
+            self._refresh()
+        else:
+            a,b = self.valeurs[slot], valeur
+            print(a,b)
+            self.valeurs[self.valeurs.index(valeur)] = b
+            self.valeurs[slot] = a
+            self._refresh()
+            
 
     def vider(self, slot: int):
         old = self.valeurs[slot]
@@ -123,6 +132,7 @@ class HexagoneMagique:
             "line_sums": sums,
             "bad_lines": bad_lines,
             "complete": complete,
+            "detail": resultats,
         }
 
     # -------------------------
@@ -186,7 +196,7 @@ class HexagoneMagique:
             self.widget.redraw()
 
 
-    def show_widget(self):
+    def dessiner_hex(self):
         from .widgets import MagicHexagonWidget
 
         self.widget = MagicHexagonWidget(self)

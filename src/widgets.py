@@ -11,7 +11,7 @@ class MagicHexagonWidget:
         self.background_image = "bg.jpg"
 
         self.board = widgets.HTML()
-        self.status = widgets.HTML(layout=widgets.Layout(width="320px", margin="2px 12px 2px 2px"))
+        self.status = widgets.HTML(layout=widgets.Layout(width="500px", margin="2px 12px 2px 2px"))
         self.history = widgets.HTML(layout=widgets.Layout(width="320px"))
 
         self.ui = widgets.VBox([
@@ -35,9 +35,12 @@ class MagicHexagonWidget:
                 </div>
             </div>
         """
+        if self.hexagon.validation_data is not None:
+            self.status.value = self._render_status()
 
-        #self.status.value = self._render_status()
-        #self.history.value = self._render_history()
+    def update_line_colours(self, validation_data=None):
+        self.hexagon.validation_data = validation_data
+        #self.redraw()
 
     def display(self):
         # Instancier les widgets
@@ -48,13 +51,39 @@ class MagicHexagonWidget:
     def _render_board(self):
         """Tracer des hexagones"""
         cells = self.hexagon.cells
+        validation = self.hexagon.validation_data
+
+        line_sums = []
+        bad_lines = []
+        line_indices = {}
+        if(validation is not None):
+            for line, item in enumerate(validation):
+                line_indices[line] = item.get("indices", [])
+                somme = item.get("somme")
+                ok = (somme == 38)
+                if ok is False and somme is not None:
+                    bad_lines.append(line)
+                line_sums.append(somme)
+        cell_fill = {}
+        for c in cells:
+            related_lines = [line for line, indices in line_indices.items() if c.indice in indices]
+            if(validation is not None):
+                if any(line in bad_lines for line in related_lines):
+                    cell_fill[c.indice] = "#ffb3b3"
+                elif related_lines and all((line not in bad_lines) for line in related_lines):
+                    cell_fill[c.indice] = "#b3ffb3"
+                else:
+                    cell_fill[c.indice] = "#ffffff" if c.valeur is None else "#fff2b3"
+            else:
+                cell_fill[c.indice] = "#ffffff" if c.valeur is None else "#fff2b3"
+
         svg = ['<svg width="650" height="520" style="background:transparent">']
         for c in cells:
             # Tracer les polygones
             x, y = axial_to_pixel(c.q, c.r, size=60)
             x += 320
             y += 260
-            fill = "#ffffff" if c.valeur is None else "#fff2b3"
+            fill = cell_fill.get(c.indice, "#ffffff")
             svg.append(f"""
                 <polygon
                     points="{self._hex_points(x, y, 55)}"
@@ -113,29 +142,34 @@ class MagicHexagonWidget:
         """
 
     def _render_status(self):
-        return
-        html = f"""
-            <div style="padding:16px; border:1px solid #dde2f0; border-radius:16px; background:#ffffff; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:100%; box-sizing:border-box;">
-                <h3 style="margin:0 0 10px 0; font-size:1.1rem;">Comment ça se passe?</h3>
-                <div style="margin-bottom:8px;">Est ce que c'est rempli? <strong style='color:{bool_color(self.hexagon.rempli)}'>{bool_to_french(self.hexagon.rempli)}</strong></div>
-                <div style="margin-bottom:8px;">Est ce que c'est valide? <strong style='color:{bool_color(self.hexagon.valide)}'>{bool_to_french(self.hexagon.valide)}</strong></div>
-                <div>Est ce un hexagone magique? <strong style='color:{bool_color(self.hexagon.gagné)}'>{bool_to_french(self.hexagon.gagné)}</strong></div>
-            </div>
-            """
-        if self.hexagon.rempli or self.hexagon.valide:
-            v = self.hexagon.valider()
-            html += "<div style='margin-top:12px;'>"
-            for i, s in enumerate(v["line_sums"]):
-                if s is None:
-                    color = "gray"
-                elif s == 38:
-                    color = "green"
-                else:
-                    color = "red"
-
-                html += f"<div style='color:{color}; margin-bottom:4px;'>Line {i}: {s}</div>"
-            html += "</div>"
+        validation = self.hexagon.validation_data 
+        bad_lines = []
+        complete = False
+        magic = False
+        complete = all(item.get("somme") is not None for item in validation)
+        magic = complete and all(
+            item.get("correct") is not False and item.get("sum") == 38
+            for item in validation
+        )
+        bad_lines = [
+            item.get("indices")
+            for item in validation
+            if item.get("somme") is not None and item.get("somme") != 38
+        ]
+        html = "<div style='padding:16px; border:1px solid #dde2f0; border-radius:16px; background:#ffffff;'>"
+        html += "<h3 style='margin:0 0 10px 0;'>Validation</h3>"
+        #html += f"<div>Complète: <strong>{'oui' if complete else 'non'}</strong></div>"
+        html += f"<div>L'hexagone est il Magique: <strong style='color:{'green' if magic else 'red'}'>{'oui' if magic else 'non'}</strong></div>"
+        #if bad_lines:
+        #    html += f"<div style='margin-top:8px; color:red;'>Lignes invalides: {', '.join(str(i + 1) for i in bad_lines)}</div>"
+        #else:
+        #    html += "<div style='margin-top:8px; color:green;'>Aucune ligne invalide</div>"
+        html += "<div style='margin-top:12px; padding:8px; border:1px solid #ddd; border-radius:10px; background:#fafafa;'>"
+        html += "<div style='margin-bottom:6px;'><span style='display:inline-block;width:16px;height:16px;background:#b3ffb3;border:1px solid #9f9;vertical-align:middle;margin-right:6px;'></span> 😊 Somme à 38</div>"
+        html += "<div><span style='display:inline-block;width:16px;height:16px;background:#ffb3b3;border:1px solid #f99;vertical-align:middle;margin-right:6px;'></span> 😡 Ne Somme pas à 38, grrr...</div>"
+        html += "</div></div>"
         return html
+
 
     def _render_history(self):
         return
