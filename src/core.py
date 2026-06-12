@@ -15,7 +15,7 @@ class Cellule:
 
 
 class HexagoneMagique:
-    def __init__(self, radius=2, dessiner_hex=True):
+    def __init__(self, radius=2, dessiner_hexagone=True):
         # Données internes
         self.radius = radius
         coords = generer_les_coordonnes_hex(radius)
@@ -27,8 +27,8 @@ class HexagoneMagique:
         self.parcours = list(range(len(self.cells)))
         self.validation_data = None
 
-        if dessiner_hex:
-            self.dessiner_hex()        
+        if dessiner_hexagone:
+            self.dessiner_hexagone()        
     
     # propriéts
     # Est ce que les étudiants ont à coder cela aussi
@@ -99,9 +99,23 @@ class HexagoneMagique:
         if self.widget:
             self.widget.redraw()
 
+    def synchroniser_cells_depuis_valeurs(self):
+        """Met à jour les objets `Cellule` d'après la liste `self.valeurs`.
 
-    def dessiner_hex(self):
+        Utile si l'utilisateur modifie directement `self.valeurs` :
+        appeler cette méthode puis `_refresh()` pour mettre à jour l'affichage.
+        """
+        for i, v in enumerate(self.valeurs):
+            # Assure que la cellule existe puis met à jour sa valeur
+            if i < len(self.cells):
+                self.cells[i].valeur = v
+
+
+    def dessiner_hexagone(self):
         from .widgets import MagicHexagonWidget
+
+        # Synchroniser les cellules avec les valeurs actuelles avant de dessiner
+        self.synchroniser_cells_depuis_valeurs()
 
         self.widget = MagicHexagonWidget(self)
         self.widget.display()
