@@ -103,10 +103,9 @@ class HexagoneMagique:
         """Met à jour les objets `Cellule` d'après la liste `self.valeurs`.
 
         Utile si l'utilisateur modifie directement `self.valeurs` :
-        appeler cette méthode puis `_refresh()` pour mettre à jour l'affichage.
+        appeler cette méthode puis `_refresh()` pour mettre à jour l'affichage. 
         """
         for i, v in enumerate(self.valeurs):
-            # Assure que la cellule existe puis met à jour sa valeur
             if i < len(self.cells):
                 self.cells[i].valeur = v
 
